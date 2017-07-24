@@ -12,7 +12,7 @@ object AddPlayerLog extends LogTrait {
   val DB_COLS = Array("HostID", "Uid", "Urs", "PhoneInfo", "Name", "Time")
   val TBL_NAME = "tblAddPlayerLog"
 
-  def parseLog(logList: ArrayBuffer[JSONObject], serverMap: collection.mutable.Map[String, String], sdkMap: collection.mutable.Map[String, String]) {
+  def parseLog(logList: ArrayBuffer[JSONObject], serverMap: collection.mutable.Map[String, ArrayBuffer[String]], sdkMap: collection.mutable.Map[String, String]) {
     val platformResults = MutableMap[String, ArrayBuffer[MutableMap[String, String]]]()
     for (log <- logList) {
       val hostID = log.getString("hostid")

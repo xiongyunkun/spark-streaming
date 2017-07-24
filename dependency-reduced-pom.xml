@@ -122,10 +122,6 @@
               <groupId>org.slf4j</groupId>
             </exclusion>
             <exclusion>
-              <artifactId>slf4j-log4j12</artifactId>
-              <groupId>org.slf4j</groupId>
-            </exclusion>
-            <exclusion>
               <artifactId>compress-lzf</artifactId>
               <groupId>com.ning</groupId>
             </exclusion>
@@ -160,10 +156,6 @@
             <exclusion>
               <artifactId>jersey-container-servlet-core</artifactId>
               <groupId>org.glassfish.jersey.containers</groupId>
-            </exclusion>
-            <exclusion>
-              <artifactId>netty</artifactId>
-              <groupId>io.netty</groupId>
             </exclusion>
             <exclusion>
               <artifactId>stream</artifactId>
@@ -283,6 +275,12 @@
           <version>2.0.2</version>
           <scope>compile</scope>
         </dependency>
+        <dependency>
+          <groupId>com.101tec</groupId>
+          <artifactId>zkclient</artifactId>
+          <version>0.10</version>
+          <scope>compile</scope>
+        </dependency>
       </dependencies>
       <properties>
         <scalaBinaryVersion>2.11</scalaBinaryVersion>
@@ -346,10 +344,6 @@
           <groupId>org.slf4j</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>slf4j-log4j12</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-        <exclusion>
           <artifactId>compress-lzf</artifactId>
           <groupId>com.ning</groupId>
         </exclusion>
@@ -384,10 +378,6 @@
         <exclusion>
           <artifactId>jersey-container-servlet-core</artifactId>
           <groupId>org.glassfish.jersey.containers</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>netty</artifactId>
-          <groupId>io.netty</groupId>
         </exclusion>
         <exclusion>
           <artifactId>stream</artifactId>

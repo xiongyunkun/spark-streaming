@@ -1,6 +1,7 @@
 package com.yuhe.mgame.db
 
 import scala.collection.mutable.{Map => MutableMap}
+import scala.collection.mutable.ArrayBuffer
 
 object ServerDB {
   /**
@@ -18,9 +19,13 @@ object ServerDB {
         val platformID = results.getString("PlatformID")
         sdkMap(sdkID) = platformID
       }
+      results.close
+      smst.close
     }catch{
       case ex: Exception =>
         ex.printStackTrace()
+    }finally{
+      conn.close
     }
     sdkMap
   }
@@ -28,9 +33,9 @@ object ServerDB {
    * 获得统计服(hostID => platformID)
    */
   def getStaticsServers() = {
-    val serverMap = MutableMap[String, String]()
-    var sql = "select a.serverid as HostID, c.platformid as PlatformID from smcs.srvgroupinfo a, "
-    sql += "smcs.servergroup b, smcs.servers c where a.groupid = b.id and b.name = '统计专区' and a.serverid = c.hostid"
+    val serverMap = MutableMap[String, ArrayBuffer[String]]()
+    var sql = "select a.serverid as HostID, c.PlatformID as PlatformID from smcs.srvgroupinfo a, "
+    sql += "smcs.servergroup b, smcs.tblMixServers c where a.groupid = b.id and b.name = '统计专区' and a.serverid = c.HostID"
     val conn = DBManager.getConnection
     try{
       val smst = conn.createStatement
@@ -38,11 +43,16 @@ object ServerDB {
       while(results.next){
         val hostID = results.getString("HostID")
         val platformID = results.getString("PlatformID")
-        serverMap(hostID) = platformID
+        serverMap(hostID) = serverMap.getOrElse(hostID, ArrayBuffer[String]())
+        serverMap(hostID) += platformID
       }
+      results.close
+      smst.close
     }catch{
       case ex: Exception =>
         ex.printStackTrace()
+    }finally{
+      conn.close
     }
     serverMap
   }

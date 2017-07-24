@@ -15,7 +15,7 @@ object LoginLog extends LogTrait {
   val DB_COLS = Array("HostID", "Uid", "Name", "Urs", "Level", "Ip", "PhoneInfo", "Time")
   val TBL_NAME = "tblLoginLog"
 
-  def parseLog(logList: ArrayBuffer[JSONObject], serverMap: collection.mutable.Map[String, String], sdkMap: collection.mutable.Map[String, String]) {
+  def parseLog(logList: ArrayBuffer[JSONObject], serverMap: collection.mutable.Map[String, ArrayBuffer[String]], sdkMap: collection.mutable.Map[String, String]) {
     val platformResults = MutableMap[String, ArrayBuffer[MutableMap[String, String]]]()
     for (log <- logList) {
       val hostID = log.getString("hostid")

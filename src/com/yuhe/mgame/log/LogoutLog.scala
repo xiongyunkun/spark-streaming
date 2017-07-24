@@ -14,7 +14,7 @@ object LogoutLog extends LogTrait {
   val TBL_NAME = "tblLogoutLog"
   val defaultValues = Map("Gold" -> "0", "Money" -> "0")
 
-  def parseLog(logList: ArrayBuffer[JSONObject], serverMap: collection.mutable.Map[String, String], sdkMap: collection.mutable.Map[String, String]) {
+  def parseLog(logList: ArrayBuffer[JSONObject], serverMap: collection.mutable.Map[String, ArrayBuffer[String]], sdkMap: collection.mutable.Map[String, String]) {
     val platformResults = MutableMap[String, ArrayBuffer[MutableMap[String, String]]]()
     for (log <- logList) {
       val hostID = log.getString("hostid")
