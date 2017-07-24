@@ -53,49 +53,12 @@ object Streaming {
   def main(args: Array[String]) {
     val conf = new SparkConf().setMaster("local").setAppName("streaming")
     val scc = new StreamingContext(conf, Duration(5000))
-    //    scc.checkpoint(".") // 因为使用到了updateStateByKey,所以必须要设置checkpoint
-    val topics = Set(topic) //我们需要消费的kafka数据的topic
     val kafkaParam = Map(
       "metadata.broker.list" -> "localhost:9092", // kafka的broker list地址
       "group.id" -> groupID,
       "auto.offset.reset" -> "largest")
 
-    var kafkaStream: InputDStream[(String, String)] = null
-    var fromOffsets: Map[TopicAndPartition, Long] = Map()
-    val children = zkClient.countChildren(s"${topicDirs.consumerOffsetDir}")
-    if (children > 0) {
-      //---get partition leader begin----    
-      val topicList = List(topic)
-      val req = new TopicMetadataRequest(topicList, 0) //得到该topic的一些信息，比如broker,partition分布情况    
-      val getLeaderConsumer = new SimpleConsumer("localhost", 9092, 10000, 10000, "OffsetLookup") // brokerList的host 、brokerList的port、过期时间、过期时间   
-      val res = getLeaderConsumer.send(req) //TopicMetadataRequest   topic broker partition 的一些信息    
-      val topicMetaOption = res.topicsMetadata.headOption
-      val partitions = topicMetaOption match {
-        case Some(tm) =>
-          tm.partitionsMetadata.map(pm => (pm.partitionId, pm.leader.get.host)).toMap[Int, String]
-        case None =>
-          Map[Int, String]()
-      }
-      for (i <- 0 until children) {
-        val partitionOffset = zkClient.readData[String](s"${topicDirs.consumerOffsetDir}/${i}")
-        val tp = TopicAndPartition(topic, i)
-        //---additional begin-----    
-        val requestMin = OffsetRequest(Map(tp -> PartitionOffsetRequestInfo(OffsetRequest.LatestTime, 1))) // -2,1    
-        val consumerMin = new SimpleConsumer(partitions(i), 9092, 10000, 10000, "getMinOffset")
-        val curOffsets = consumerMin.getOffsetsBefore(requestMin).partitionErrorAndOffsets(tp).offsets
-        var nextOffset = partitionOffset.toLong
-        if (curOffsets.length > 0 && nextOffset < curOffsets.head) { //如果下一个offset小于当前的offset    
-          nextOffset = curOffsets.head
-        }
-        //---additional end-----    
-        fromOffsets += (tp -> nextOffset)
-        fromOffsets += (tp -> partitionOffset.toLong) //将不同 partition 对应的 offset 增加到 fromOffsets中 
-      }
-      val messageHandler = (mmd: MessageAndMetadata[String, String]) => (mmd.topic, mmd.message()) //这个会将 kafka 的消息进行 transform，最终 kafak 的数据都会变成 (topic_name, message) 这样的 tuple  
-      kafkaStream = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder, (String, String)](scc, kafkaParam, fromOffsets, messageHandler)
-    } else {
-      kafkaStream = KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](scc, kafkaParam, topics)
-    }
+    val kafkaStream = createStream(scc, kafkaParam)
 
     //统计专区和sdkMap都放到广播变量当中
     var staticsServers = BroadcastWrapper[scala.collection.mutable.Map[String, ArrayBuffer[String]]](scc, ServerDB.getStaticsServers)
@@ -159,8 +122,43 @@ object Streaming {
    * @param topics        需要消费的topic集合
    * @return
    */
-  def createStream(scc: StreamingContext, kafkaParam: Map[String, String], topics: Set[String]) = {
-    KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](scc, kafkaParam, topics)
+  def createStream(scc: StreamingContext, kafkaParam: Map[String, String]) = {
+    var fromOffsets: Map[TopicAndPartition, Long] = Map()
+    val children = zkClient.countChildren(s"${topicDirs.consumerOffsetDir}")
+    if (children > 0) {
+      //---get partition leader begin----    
+      val topicList = List(topic)
+      val req = new TopicMetadataRequest(topicList, 0) //得到该topic的一些信息，比如broker,partition分布情况    
+      val getLeaderConsumer = new SimpleConsumer("localhost", 9092, 10000, 10000, "OffsetLookup") // brokerList的host 、brokerList的port、过期时间、过期时间   
+      val res = getLeaderConsumer.send(req) //TopicMetadataRequest   topic broker partition 的一些信息    
+      val topicMetaOption = res.topicsMetadata.headOption
+      val partitions = topicMetaOption match {
+        case Some(tm) =>
+          tm.partitionsMetadata.map(pm => (pm.partitionId, pm.leader.get.host)).toMap[Int, String]
+        case None =>
+          Map[Int, String]()
+      }
+      for (i <- 0 until children) {
+        val partitionOffset = zkClient.readData[String](s"${topicDirs.consumerOffsetDir}/${i}")
+        val tp = TopicAndPartition(topic, i)
+        //---additional begin-----    
+        val requestMin = OffsetRequest(Map(tp -> PartitionOffsetRequestInfo(OffsetRequest.LatestTime, 1))) // -2,1    
+        val consumerMin = new SimpleConsumer(partitions(i), 9092, 10000, 10000, "getMinOffset")
+        val curOffsets = consumerMin.getOffsetsBefore(requestMin).partitionErrorAndOffsets(tp).offsets
+        var nextOffset = partitionOffset.toLong
+        if (curOffsets.length > 0 && nextOffset < curOffsets.head) { //如果下一个offset小于当前的offset    
+          nextOffset = curOffsets.head
+        }
+        //---additional end-----    
+        fromOffsets += (tp -> nextOffset)
+        fromOffsets += (tp -> partitionOffset.toLong) //将不同 partition 对应的 offset 增加到 fromOffsets中 
+      }
+      val messageHandler = (mmd: MessageAndMetadata[String, String]) => (mmd.topic, mmd.message()) //这个会将 kafka 的消息进行 transform，最终 kafak 的数据都会变成 (topic_name, message) 这样的 tuple  
+      KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder, (String, String)](scc, kafkaParam, fromOffsets, messageHandler)
+    } else {
+      val topics = Set(topic) //我们需要消费的kafka数据的topic
+      KafkaUtils.createDirectStream[String, String, StringDecoder, StringDecoder](scc, kafkaParam, topics)
+    }
   }
 }
 
