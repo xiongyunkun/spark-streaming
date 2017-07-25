@@ -51,7 +51,7 @@ object Streaming {
   val topicDirs = new ZKGroupTopicDirs("xl_streaming", topic)
 
   def main(args: Array[String]) {
-    val conf = new SparkConf().setMaster("local").setAppName("streaming")
+    val conf = new SparkConf().setMaster("spark://localhost:7077").setAppName("streaming")
     val scc = new StreamingContext(conf, Duration(5000))
     val kafkaParam = Map(
       "metadata.broker.list" -> "localhost:9092", // kafka的broker list地址
@@ -61,7 +61,7 @@ object Streaming {
     val kafkaStream = createStream(scc, kafkaParam)
 
     //统计专区和sdkMap都放到广播变量当中
-    var staticsServers = BroadcastWrapper[scala.collection.mutable.Map[String, ArrayBuffer[String]]](scc, ServerDB.getStaticsServers)
+    var staticsServers = BroadcastWrapper[MutableMap[String, ArrayBuffer[String]]](scc, ServerDB.getStaticsServers)
     val broadSDKMap = BroadcastWrapper[scala.collection.mutable.Map[String, String]](scc, ServerDB.getSDKMap)
     var lastTime = System.currentTimeMillis
     var offsetRanges = Array[OffsetRange]()
