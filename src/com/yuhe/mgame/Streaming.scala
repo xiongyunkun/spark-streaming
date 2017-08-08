@@ -37,7 +37,6 @@ object Streaming {
         return data.toString().getBytes("UTF-8")
       } catch {
         case e: ZkMarshallingError => return null
-
       }
     }
     override def deserialize(bytes: Array[Byte]): Object = {
@@ -52,7 +51,7 @@ object Streaming {
 
   def main(args: Array[String]) {
     val conf = new SparkConf().setMaster("spark://localhost:7077").setAppName("streaming")
-    val scc = new StreamingContext(conf, Duration(5000))
+    val scc = new StreamingContext(conf, Duration(1000))
     val kafkaParam = Map(
       "metadata.broker.list" -> "localhost:9092", // kafka的broker list地址
       "group.id" -> groupID,
@@ -84,7 +83,7 @@ object Streaming {
             logMap(logType) = logMap.getOrElse(logType, ArrayBuffer[JSONObject]())
             logMap(logType) += json
           })
-          for((logType, jsonList) <- logMap){
+          for ((logType, jsonList) <- logMap) {
             val logObject = getLogObject(logType)
             if (logObject != null) {
               val serverMap = staticsServers.value
@@ -108,7 +107,9 @@ object Streaming {
       "login" -> LoginLog,
       "logout" -> LogoutLog,
       "addplayer" -> AddPlayerLog,
-      "online" -> Online)
+      "online" -> Online,
+      "clientload" -> ClientLoad,
+      "www" -> Www)
     if (classMap.contains(logType))
       classMap(logType)
     else
