@@ -51,7 +51,7 @@ object Streaming {
 
   def main(args: Array[String]) {
     val conf = new SparkConf().setMaster("spark://localhost:7077").setAppName("streaming")
-    val scc = new StreamingContext(conf, Duration(1000))
+    val scc = new StreamingContext(conf, Duration(1000)) //每隔1秒去获取一次
     val kafkaParam = Map(
       "metadata.broker.list" -> "localhost:9092", // kafka的broker list地址
       "group.id" -> groupID,
@@ -88,7 +88,12 @@ object Streaming {
             if (logObject != null) {
               val serverMap = staticsServers.value
               val sdkMap = broadSDKMap.value
-              logObject.parseLog(jsonList, serverMap, sdkMap)
+              try {
+                logObject.parseLog(jsonList, serverMap, sdkMap)
+              } catch {
+                case ex: Exception =>
+                  ex.printStackTrace()
+              }
             }
           }
         })
