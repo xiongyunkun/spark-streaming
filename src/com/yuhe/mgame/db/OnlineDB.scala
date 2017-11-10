@@ -1,7 +1,6 @@
 package com.yuhe.mgame.db
 
 import scala.collection.mutable.ArrayBuffer
-import org.apache.commons.lang.StringUtils
 
 object OnlineDB {
 

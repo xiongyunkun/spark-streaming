@@ -9,7 +9,7 @@ object UserInfoDB {
   /**
    * 根据登陆日志插入玩家角色信息表
    */
-  def insertLoginUser(platformID:String, results:ArrayBuffer[MutableMap[String, String]]) = {
+  def insertLoginUser(platformID:String, results:ArrayBuffer[MutableMap[String, String]]): Unit = {
     val insertCols = Array("HostID", "Uid", "Urs", "Name", "Time", "LastUpdateTime", "SrcHostID")
     val timeFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     val timeStr = timeFormat.format(new Date())

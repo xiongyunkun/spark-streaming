@@ -30,7 +30,7 @@ object DateUtils2 {
 		dateStr
   }
   
-  def getFloorTime(timestamp:Int) = {
+  def getFloorTime(timestamp:Long) = {
     // 先获得当天0点的时间戳
     val benCal = Calendar.getInstance()
     benCal.set(Calendar.HOUR_OF_DAY, 0)
@@ -49,5 +49,10 @@ object DateUtils2 {
 		val floorTime = benTime + floor * 300000
 		val timeStr = DateFormatUtils.format(floorTime, TimeFormat)
 		timeStr
+  }
+
+  def main(args: Array[String]): Unit = {
+    val timestamp = 1508148668
+    println(getFloorTime(timestamp))
   }
 }
